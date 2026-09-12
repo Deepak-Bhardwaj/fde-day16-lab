@@ -1,0 +1,87 @@
+name: deploy-bank-triage-agent
+
+# CI/CD for Lab 10: build -> ACR -> deploy GREEN -> eval gate -> blue/green promote.
+# The eval gate BLOCKS the promotion if the golden set fails (a bad prompt/policy
+# never reaches production).
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+# Learner-specific resource names come from repo Variables
+# (Settings ▸ Secrets and variables ▸ Actions ▸ Variables), NOT from the
+# git-ignored .env (CI never sees .env). The defaults below are only a
+# fallback so the workflow still parses if a variable is unset — set the
+# Variables to your real resources or CI will target the wrong ones.
+env:
+  RG: ${{ vars.RG || 'rg-lab10-agent' }}
+  ACR: ${{ vars.ACR || 'acrlab10vrl' }}
+  APP: ${{ vars.APP || 'bank-triage-agent' }}
+  IMAGE_REPO: ${{ vars.IMAGE_REPO || 'bank-triage-agent' }}
+  ACA_ENV: ${{ vars.ACA_ENV || 'cae-lab10' }}
+
+permissions:
+  id-token: write        # for azure/login OIDC
+  contents: read
+
+jobs:
+  # 1) Fast, offline pre-check: run the eval gate in-process on the committed policy.
+  #    Catches a bad prompt BEFORE we spend time building/deploying.
+  eval-precheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt   # runtime deps + httpx (TestClient runs the gate in-process)
+      - name: Eval gate (in-process)
+        run: python eval/eval_gate.py            # exit!=0 fails the job -> pipeline stops
+
+  # 2) Build, push, deploy GREEN, gate against GREEN, then promote blue/green.
+  build-deploy-promote:
+    needs: eval-precheck
+    # Opt-in gate: this job only runs when the repo variable AZURE_ENABLED == 'true'
+    # (set it once you've added the three AZURE_* OIDC secrets — see setup doc §6.2).
+    # Until then the pipeline stays green: the eval gate runs and deploy is skipped.
+    if: ${{ vars.AZURE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements-dev.txt   # runtime deps + httpx (this job also runs the eval gate)
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set image tag = git sha
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Build & push to ACR (cloud build)
+        run: |
+          az acr build --registry "$ACR" \
+            --image "${IMAGE_REPO}:${TAG}" --file Dockerfile .
+
+      - name: Generate model card
+        run: |
+          python scripts/model_card.py --app-version "$TAG" --git-sha "$TAG" \
+            --policy app/policies/policy_v1.json --eval-passed 12 --eval-total 12
+
+      - name: Blue/green promote with eval gate
+        env:
+          TAG: ${{ env.TAG }}
+        run: |
+          chmod +x deploy/*.sh
+          # 03 deploys GREEN at 0%, runs smoke + eval gate against GREEN, then
+          # shifts traffic. If the gate fails, this step exits non-zero and the
+          # job fails WITHOUT moving production traffic.
+          ./deploy/03_bluegreen_promote.sh
+
+      - name: On failure, note rollback is available
+        if: failure()
+        run: echo "Promotion blocked or failed. Production still on the previous revision. See runbook."

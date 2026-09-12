@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "description": "Bank transaction-triage policy. Good baseline used in production.",
+  "block_over_gbp": 10000,
+  "review_risk_levels": ["high"],
+  "sanctioned_countries": ["XX", "ZZ"],
+  "notes": "Block any transaction over 10,000 GBP unless a human has approved it (HITL). Send high-risk or sanctioned-country transactions to human review. Otherwise approve."
+}

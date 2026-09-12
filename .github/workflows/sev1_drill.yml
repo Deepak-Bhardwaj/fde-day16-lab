@@ -1,0 +1,76 @@
+name: sev1-rollback-drill
+
+# LAB 10 — manual SEV-1 rollback drill, runnable from the Actions tab.
+#   action = deploy-bad -> deploy the BAD policy to prod, SKIPPING the eval gate
+#                          (simulates a bad change slipping into production)
+#   action = rollback   -> shift 100% traffic back to the last good revision
+# Uses the SAME OIDC login + repo Variables as deploy.yml. Manual only — never
+# runs on push, so it can't fire by accident.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to simulate"
+        type: choice
+        options:
+          - deploy-bad
+          - rollback
+        default: deploy-bad
+      revision:
+        description: "rollback only: target revision name (blank = previous active)"
+        type: string
+        default: ""
+
+env:
+  RG: ${{ vars.RG || 'rg-lab10-agent' }}
+  ACR: ${{ vars.ACR || 'acrlab10vrl' }}
+  APP: ${{ vars.APP || 'bank-triage-agent' }}
+  IMAGE_REPO: ${{ vars.IMAGE_REPO || 'bank-triage-agent' }}
+  ACA_ENV: ${{ vars.ACA_ENV || 'cae-lab10' }}
+
+permissions:
+  id-token: write        # for azure/login OIDC
+  contents: read
+
+jobs:
+  drill:
+    # Same opt-in gate as the deploy job: needs the AZURE_* secrets + Variables.
+    if: ${{ vars.AZURE_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set image tag = git sha
+        run: echo "TAG=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      # deploy-bad: build the image, then promote a revision running the BAD
+      # policy WITHOUT the eval gate. 03 keeps the previous good revision active
+      # at 0% traffic, so the rollback below has a target.
+      - name: Simulate a BAD deploy (skips the eval gate)
+        if: ${{ inputs.action == 'deploy-bad' }}
+        env:
+          AGENT_POLICY: policies/policy_v2_bad.json
+          SKIP_EVAL_GATE: "1"
+        run: |
+          chmod +x deploy/*.sh
+          az acr build --registry "$ACR" --image "${IMAGE_REPO}:${TAG}" --file Dockerfile .
+          ./deploy/03_bluegreen_promote.sh
+
+      # rollback: shift 100% traffic back to the last known-good revision.
+      # inputs.revision is passed via env (never interpolated into the script)
+      # to avoid shell injection; blank -> 04 picks the previous active revision.
+      - name: Roll back to the last good revision
+        if: ${{ inputs.action == 'rollback' }}
+        env:
+          TARGET_REVISION: ${{ inputs.revision }}
+        run: |
+          chmod +x deploy/*.sh
+          ./deploy/04_rollback.sh "$TARGET_REVISION"

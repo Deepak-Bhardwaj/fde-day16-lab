@@ -1,0 +1,8 @@
+# Local authoring / offline-lab dependencies.
+# The container image only needs app/requirements.txt (kept tiny).
+# The eval gate and smoke test drive the app in-process via
+# fastapi.testclient.TestClient, which requires httpx.
+-r app/requirements.txt
+httpx==0.28.1
+# Load testing the autoscaling rule (deploy/containerapp.yaml) — see load/locustfile.py.
+locust==2.45.0

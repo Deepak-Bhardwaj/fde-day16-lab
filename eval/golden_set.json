@@ -1,0 +1,14 @@
+[
+  {"name": "small_domestic_low_risk", "txn": {"amount_gbp": 250, "country": "GB", "customer_risk": "low"}, "expected": "approve"},
+  {"name": "medium_domestic_low_risk", "txn": {"amount_gbp": 4500, "country": "GB", "customer_risk": "low"}, "expected": "approve"},
+  {"name": "high_value_no_hitl_MUST_BLOCK", "txn": {"amount_gbp": 25000, "country": "GB", "customer_risk": "low"}, "expected": "block"},
+  {"name": "very_high_value_no_hitl_MUST_BLOCK", "txn": {"amount_gbp": 500000, "country": "US", "customer_risk": "low"}, "expected": "block"},
+  {"name": "high_value_with_hitl_ok", "txn": {"amount_gbp": 25000, "country": "GB", "customer_risk": "low", "hitl_approved": true}, "expected": "approve"},
+  {"name": "high_risk_customer_review", "txn": {"amount_gbp": 800, "country": "GB", "customer_risk": "high"}, "expected": "review"},
+  {"name": "sanctioned_country_review", "txn": {"amount_gbp": 300, "country": "XX", "customer_risk": "low"}, "expected": "review"},
+  {"name": "sanctioned_country_high_value_block", "txn": {"amount_gbp": 40000, "country": "ZZ", "customer_risk": "low"}, "expected": "block"},
+  {"name": "boundary_at_threshold_approve", "txn": {"amount_gbp": 10000, "country": "GB", "customer_risk": "low"}, "expected": "approve"},
+  {"name": "just_over_threshold_block", "txn": {"amount_gbp": 10001, "country": "GB", "customer_risk": "low"}, "expected": "block"},
+  {"name": "high_risk_high_value_block", "txn": {"amount_gbp": 90000, "country": "GB", "customer_risk": "high"}, "expected": "block"},
+  {"name": "low_risk_foreign_small_approve", "txn": {"amount_gbp": 1200, "country": "FR", "customer_risk": "low"}, "expected": "approve"}
+]

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#444"/></marker>
+    <marker id="ag" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#538135"/></marker>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#c00000"/></marker>
+  </defs>
+
+  <text x="490" y="32" text-anchor="middle" font-size="21" font-weight="bold" fill="#1f4e79">CI/CD — Blue/Green Deploy with an Eval Gate</text>
+  <text x="490" y="53" text-anchor="middle" font-size="12.5" fill="#666">GitHub Actions → ACR → Container Apps · the gate blocks bad deploys</text>
+
+  <!-- pipeline row -->
+  <rect x="30" y="90" width="150" height="56" rx="9" fill="#dae8fc" stroke="#1f4e79" stroke-width="1.8"/>
+  <text x="105" y="114" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f4e79">Git push</text>
+  <text x="105" y="132" text-anchor="middle" font-size="10.5" fill="#33547a">GitHub Actions</text>
+
+  <rect x="210" y="90" width="150" height="56" rx="9" fill="#dae8fc" stroke="#1f4e79" stroke-width="1.8"/>
+  <text x="285" y="112" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f4e79">Eval pre-check</text>
+  <text x="285" y="130" text-anchor="middle" font-size="10.5" fill="#33547a">in-process golden set</text>
+
+  <rect x="390" y="90" width="150" height="56" rx="9" fill="#dae8fc" stroke="#1f4e79" stroke-width="1.8"/>
+  <text x="465" y="112" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f4e79">Build image</text>
+  <text x="465" y="130" text-anchor="middle" font-size="10.5" fill="#33547a">az acr build → ACR</text>
+
+  <rect x="570" y="90" width="170" height="56" rx="9" fill="#fff2cc" stroke="#bf9000" stroke-width="1.8"/>
+  <text x="655" y="112" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#7f6000">Deploy GREEN @ 0%</text>
+  <text x="655" y="130" text-anchor="middle" font-size="10.5" fill="#7f6000">new revision, no traffic</text>
+
+  <line x1="180" y1="118" x2="208" y2="118" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+  <line x1="360" y1="118" x2="388" y2="118" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+  <line x1="540" y1="118" x2="568" y2="118" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+
+  <!-- eval gate diamond -->
+  <polygon points="655,200 745,250 655,300 565,250" fill="#fce4e4" stroke="#c00000" stroke-width="2"/>
+  <text x="655" y="245" text-anchor="middle" font-size="13" font-weight="bold" fill="#a30000">EVAL GATE</text>
+  <text x="655" y="263" text-anchor="middle" font-size="10.5" fill="#a30000">smoke + golden set</text>
+  <line x1="655" y1="146" x2="655" y2="198" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+
+  <!-- PASS -> promote -->
+  <rect x="770" y="222" width="180" height="56" rx="9" fill="#e2efda" stroke="#538135" stroke-width="2"/>
+  <text x="860" y="244" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#375623">Shift 100% → GREEN</text>
+  <text x="860" y="262" text-anchor="middle" font-size="10.5" fill="#375623">traffic set (promote)</text>
+  <path d="M745,250 L768,250" stroke="#538135" stroke-width="2" marker-end="url(#ag)"/>
+  <text x="742" y="240" font-size="11" fill="#538135" font-weight="bold">PASS</text>
+
+  <!-- FAIL -> block -->
+  <rect x="565" y="360" width="180" height="56" rx="9" fill="#fce4e4" stroke="#c00000" stroke-width="2"/>
+  <text x="655" y="382" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#a30000">BLOCK deploy</text>
+  <text x="655" y="400" text-anchor="middle" font-size="10.5" fill="#a30000">traffic stays on BLUE</text>
+  <path d="M655,300 L655,358" stroke="#c00000" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="668" y="330" font-size="11" fill="#c00000" font-weight="bold">FAIL</text>
+
+  <!-- Container Apps box -->
+  <rect x="40" y="360" width="470" height="160" rx="10" fill="#eef3fb" stroke="#1f4e79" stroke-width="1.5"/>
+  <text x="60" y="386" font-size="14" font-weight="bold" fill="#1f4e79">Azure Container Apps (Multiple revision mode)</text>
+
+  <rect x="70" y="404" width="180" height="52" rx="8" fill="#dbe9fb" stroke="#1f4e79"/>
+  <text x="160" y="426" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1f4e79">BLUE revision</text>
+  <text x="160" y="444" text-anchor="middle" font-size="10.5" fill="#33547a">known-good · policy v1</text>
+
+  <rect x="300" y="404" width="180" height="52" rx="8" fill="#e2efda" stroke="#538135"/>
+  <text x="390" y="426" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#375623">GREEN revision</text>
+  <text x="390" y="444" text-anchor="middle" font-size="10.5" fill="#375623">candidate · new image</text>
+
+  <text x="60" y="486" font-size="11.5" fill="#555">Ingress traffic weights decide who serves. Probes: /health (liveness) · /ready (readiness).</text>
+  <text x="60" y="504" font-size="11.5" fill="#c00000" font-weight="bold">SEV-1 rollback = set traffic 100% back to BLUE (04_rollback.sh) — seconds, no rebuild.</text>
+
+  <!-- promote arrow into green revision -->
+  <path d="M860,278 C860,330 470,360 430,402" fill="none" stroke="#538135" stroke-width="1.6" stroke-dasharray="4,3" marker-end="url(#ag)"/>
+  <!-- rollback arrow green->blue -->
+  <path d="M300,430 L252,430" stroke="#c00000" stroke-width="2" marker-end="url(#ar)"/>
+  <text x="256" y="422" font-size="10.5" fill="#c00000">rollback</text>
+</svg>

@@ -1,0 +1,16 @@
+# Python virtual environment (local authoring only)
+.venv/
+venv/
+
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# OS cruft
+.DS_Store
+
+# Local env / secrets
+.env
+*.local

@@ -1,0 +1,12 @@
+**/__pycache__/
+**/*.pyc
+.git/
+.github/
+deploy/
+diagram/
+eval/
+scripts/
+*.md
+*.docx
+*.xlsx
+.venv/

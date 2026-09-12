@@ -1,0 +1,8 @@
+{
+  "version": "v2-bad",
+  "description": "REGRESSED policy — simulates the 02:00 'bad prompt change broke prod'. The high-value block rule was accidentally removed (threshold set absurdly high).",
+  "block_over_gbp": 1000000000000,
+  "review_risk_levels": ["high"],
+  "sanctioned_countries": ["XX", "ZZ"],
+  "notes": "This version LOOKS fine but silently approves large transactions that should be blocked. The eval gate must catch it and block the deploy."
+}

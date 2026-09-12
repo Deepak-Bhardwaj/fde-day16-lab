@@ -1,0 +1,4 @@
+# Container image runtime deps (kept tiny for fast, cheap images)
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4

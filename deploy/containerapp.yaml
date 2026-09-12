@@ -1,0 +1,60 @@
+# Container App template with HEALTH PROBES and AUTO-SCALING.
+# Apply/patch with:  az containerapp update --name $APP --resource-group $RG --yaml deploy/containerapp.yaml
+# (Placeholders like <IMAGE> are substituted by 02_deploy_containerapp.sh via envsubst.)
+properties:
+  configuration:
+    activeRevisionsMode: Multiple        # REQUIRED for blue/green traffic splitting
+    ingress:
+      external: true
+      targetPort: 8000
+      transport: auto
+      # NOTE: traffic weights are intentionally NOT pinned here.
+      # Blue/green routing is managed explicitly, BY REVISION NAME, in
+      # deploy/03_bluegreen_promote.sh and deploy/04_rollback.sh.
+      # A static `latestRevision: true` would auto-route 100% to any new
+      # revision the instant it is created — defeating the "hold green at 0%,
+      # test it in isolation, then promote" model this lab teaches.
+  template:
+    containers:
+      - name: bank-triage-agent
+        image: <IMAGE>
+        resources:
+          cpu: 0.5
+          memory: 1.0Gi
+        env:
+          - name: APP_VERSION
+            value: "<TAG>"
+          - name: GIT_SHA
+            value: "<TAG>"
+          - name: AGENT_POLICY
+            value: "policies/policy_v1.json"
+        probes:
+          - type: Liveness            # is the process alive? restart if not
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            failureThreshold: 3
+          - type: Readiness           # only send traffic when policy is loaded
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            failureThreshold: 3
+          - type: Startup             # give the app time to boot before liveness
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 10
+    scale:
+      minReplicas: 1                   # keep 1 warm (bank latency SLA); use 0 to scale-to-zero
+      maxReplicas: 10
+      rules:
+        - name: http-concurrency
+          http:
+            metadata:
+              concurrentRequests: "50" # add a replica per ~50 concurrent requests

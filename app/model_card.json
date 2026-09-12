@@ -1,0 +1,30 @@
+{
+  "model_name": "bank-transaction-triage-agent",
+  "app_version": "1.4.0",
+  "git_sha": "testsha",
+  "generated_utc": "2026-07-10T09:25:14.476267Z",
+  "intended_use": "Triage bank transactions into approve / review / block.",
+  "policy": {
+    "version": "v1",
+    "block_over_gbp": 10000,
+    "review_risk_levels": [
+      "high"
+    ],
+    "sanctioned_countries": [
+      "XX",
+      "ZZ"
+    ],
+    "description": "Bank transaction-triage policy. Good baseline used in production."
+  },
+  "evaluation": {
+    "golden_set_passed": 12,
+    "golden_set_total": 12,
+    "pass_rate": 1.0
+  },
+  "limitations": [
+    "Deterministic policy demo \u2014 not a substitute for full AML screening.",
+    "Thresholds are illustrative; calibrate to real risk appetite."
+  ],
+  "owner": "Payments Platform Team",
+  "rollback": "Shift Container Apps traffic to the previous known-good revision (see runbook)."
+}
