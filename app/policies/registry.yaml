@@ -1,0 +1,12 @@
+active: v1
+versions:
+  v1:
+    author: "Deepak Bhardwaj"
+    commit: "main"
+    description: "Good baseline used in production."
+    eval: { pass_rate: 1.0, correctness: 0.98 }
+  v2-bad:
+    author: "Deepak Bhardwaj"
+    commit: "main"
+    description: "REGRESSED policy — simulates the 02:00 bad change."
+    eval: { pass_rate: 0.80 } # Would fail the 2% regression gate

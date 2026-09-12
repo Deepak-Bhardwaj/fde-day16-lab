@@ -1,0 +1,5 @@
+{"txn": {"amount_gbp": 5000, "country": "GB", "customer_risk": "low", "hitl_approved": false}, "expected_decision": "approve"}
+{"txn": {"amount_gbp": 25000, "country": "GB", "customer_risk": "low", "hitl_approved": false}, "expected_decision": "block"}
+{"txn": {"amount_gbp": 25000, "country": "GB", "customer_risk": "low", "hitl_approved": true}, "expected_decision": "approve"}
+{"txn": {"amount_gbp": 1000, "country": "XX", "customer_risk": "low", "hitl_approved": false}, "expected_decision": "review"}
+{"txn": {"amount_gbp": 5000, "country": "GB", "customer_risk": "high", "hitl_approved": false}, "expected_decision": "review"}
